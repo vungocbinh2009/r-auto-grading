@@ -2,9 +2,11 @@ library(here)
 library(writexl)
 library(readxl)
 library(gradeR)
+library(stringr)
 
 # Các bước viết file này
 # 1. Liệt kê các file
+
 # 1.1. Liệt kê các file trong folder answer_files
 file_list <- list.files(here("answer_files"))
 
@@ -13,27 +15,34 @@ file_list <- list.files(here("answer_files"))
 # read_excel(here("example_data", "file.xlsx"))
 
 # 2. Tạo các vector để lưu lại kết quả thi.
+student_order <- NULL
 student_name <- NULL
 student_id <- NULL
-path <- NULL
+id <- NULL
 
-# 3. Đối với mỗi file trong answer_files, tạo 1 environment và test code để tính điểm, lưu lại thông tin trong dataframe
+# 3. Duyệt qua file_list để lấy thông tin về sinh viên
+# Tên file code của sinh viên phải đặt theo cú pháp stt_HoVaTen_masv.R. Ví dụ: 1_VuNgocBinh_12345678.R
 for(file in file_list) {
-  test_env <- new.env()
-  sys.source(file = here("answer_files", file), envir = test_env, toplevel.env = test_env)
-  student_name <- c(student_name, test_env$STUDENT_NAME)
-  student_id <- c(student_id, test_env$STUDENT_ID)
-  path <- c(path, here("answer_files", file))
+  file_name <- str_remove(file, "\\.[Rr]")
+  split_result <- str_split(string = file_name, pattern = "_")
+  student_order <- c(student_order, split_result[[1]][1])
+  student_name <- c(student_name, split_result[[1]][2])
+  student_id <- c(student_id, split_result[[1]][3])
+  id <- c(id, here("answer_files", file))
 }
 
-info_df <- data.frame(student_name, student_id, path)
+# 4. Thực hiện việc chấm điểm và ghép 2 bảng lại với nhau
+info_df <- data.frame(student_order, student_name, student_id, id)
 grade_df <- calcGrades(
   submission_dir = trimws(here("answer_files", " ")),
   your_test_file = here("test_answer.R")
 )
-colnames(grade_df) <- c("path", "bai_1", "bai_2")
-final_result <- merge(info_df, grade_df, by = "path")
+print(colnames(grade_df))
 
-# 4. Xuất dataframe sang file excel. Có thể viết 1 số hàm để sử lý bảng trước khi xuất file excel
+final_result <- merge(info_df, grade_df, by = "id")
+
+# 5. Tính toán cột điểm tổng kết.
 final_result$total <- final_result$bai_1 + final_result$bai_2
+
+# 6. Xuất dataframe sang file excel. Có thể viết 1 số hàm để sử lý bảng trước khi xuất file excel
 write_xlsx(final_result, "final_result.xlsx")
