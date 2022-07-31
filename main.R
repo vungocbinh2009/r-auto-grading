@@ -3,6 +3,7 @@ library(writexl)
 library(readxl)
 library(gradeR)
 library(stringr)
+library(SimilaR)
 
 # Các bước viết file này
 # 1. Liệt kê các file
@@ -37,6 +38,7 @@ grade_df <- calcGrades(
   submission_dir = trimws(here("answer_files", " ")),
   your_test_file = here("test_answer.R")
 )
+
 print(colnames(grade_df))
 
 final_result <- merge(info_df, grade_df, by = "id")
@@ -46,3 +48,13 @@ final_result$total <- final_result$bai_1 + final_result$bai_2
 
 # 6. Xuất dataframe sang file excel. Có thể viết 1 số hàm để sử lý bảng trước khi xuất file excel
 write_xlsx(final_result, "final_result.xlsx")
+
+# 7. Check sự giống nhau về code của sinh viên
+similarity <- SimilaR_fromDirectory(
+  dirname = trimws(here("answer_files", " ")),
+  returnType = "data.frame",
+  fileTypes = "file",
+  aggregation = "tnorm"
+)
+
+write_xlsx(similarity, "similarity.xlsx")

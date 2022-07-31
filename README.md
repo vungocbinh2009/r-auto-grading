@@ -20,4 +20,7 @@ A simple project for auto grading R coding exam
 5. Edit `test_answer.R` script to get exam answer.
 6. Edit `main.R` file to grading students' answer and run it!
 
-
+# R packages used
+```r
+install.packages(c("here", "writexl", "readxl", "gradeR", "stringr", "testthat", "SimilaR"))
+```
